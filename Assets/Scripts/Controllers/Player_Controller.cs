@@ -15,6 +15,8 @@ public class PlayerController : Controler
     public KeyCode pitchClockwise;
     public KeyCode pitchCounterclockwise;
 
+    public KeyCode shootKey;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public override void Start()
     {
@@ -62,6 +64,10 @@ public class PlayerController : Controler
             if (Input.GetKey(pitchCounterclockwise))
             {
                 pawn.PitchCounterclockwise();
+            }
+            if (Input.GetKeyDown(shootKey))
+            {
+                pawn.Shoot();
             }
         }
     }

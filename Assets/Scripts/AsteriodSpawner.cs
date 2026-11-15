@@ -1,69 +1,62 @@
+
 using UnityEngine;
 
 public class AsteriodSpawner : MonoBehaviour
 {
     [Header("Asteroid Settings")]
     public GameObject asteroidPrefab;
-    public int asteroidCount = 8;
+    public int asteroidCount;
 
-    [Header("Spawn Settings")]
-    public float spawnPadding = 1f;
-    public float minDistanceFromPlayer = 4f;
-    public int maxAttemptsPerAsteroid = 100;
+    [Header("3D Spawn Area")]
+    public float spawnAreaWidth;
+    public float spawnAreaHeight;
+    public float spawnAreaDepth;
+    public float spawnPadding;
+
+    [Header("Player Safety")]
+    public float minDistanceFromPlayer;
+    public int maxAttemptsPerAsteroid;
+
+    private Transform playerTransform;
 
     private void Start()
     {
+        FindPlayer();
         SpawnAsteroids();
+    }
+
+    private void FindPlayer()
+    {
+        if (GameManager.instance != null &&
+            GameManager.instance.playerController != null &&
+            GameManager.instance.playerController.pawn != null)
+        {
+            playerTransform = GameManager.instance
+                .playerController.pawn.transform;
+        }
+
+        if (playerTransform == null)
+        {
+            Debug.LogError(
+                "Asteroid Spawner: Could not find the player!");
+        }
     }
 
     public void SpawnAsteroids()
     {
         if (asteroidPrefab == null)
         {
-            Debug.LogError("Asteroid Spawner: Assign an asteroid prefab!");
+            Debug.LogError(
+                "Asteroid Spawner: Assign an asteroid prefab!");
             return;
         }
 
-        Camera cam = Camera.main;
-
-        if (cam == null)
+        if (playerTransform == null)
         {
-            Debug.LogError("Asteroid Spawner: No Main Camera found!");
-            return;
-        }
+            FindPlayer();
 
-        // Find the visible play area at the asteroid's Z position.
-        float distance = Mathf.Abs(cam.transform.position.z);
-
-        Vector3 bottomLeft = cam.ViewportToWorldPoint(
-            new Vector3(0f, 0f, distance));
-
-        Vector3 topRight = cam.ViewportToWorldPoint(
-            new Vector3(1f, 1f, distance));
-
-        float minX = bottomLeft.x + spawnPadding;
-        float maxX = topRight.x - spawnPadding;
-        float minY = bottomLeft.y + spawnPadding;
-        float maxY = topRight.y - spawnPadding;
-
-        if (minX >= maxX || minY >= maxY)
-        {
-            Debug.LogError("Asteroid Spawner: Spawn area is too small.");
-            return;
-        }
-
-        // Find the player position if the GameManager has registered it.
-        Vector3 playerPosition = Vector3.zero;
-        bool hasPlayer = false;
-
-        if (GameManager.instance != null &&
-            GameManager.instance.playerController != null &&
-            GameManager.instance.playerController.pawn != null)
-        {
-            playerPosition = GameManager.instance
-                .playerController.pawn.transform.position;
-
-            hasPlayer = true;
+            if (playerTransform == null)
+                return;
         }
 
         int spawned = 0;
@@ -77,13 +70,25 @@ public class AsteriodSpawner : MonoBehaviour
                  attempt < maxAttemptsPerAsteroid;
                  attempt++)
             {
-                spawnPosition = new Vector3(
-                    Random.Range(minX, maxX),
-                    Random.Range(minY, maxY),
-                    0f);
+                // Random position inside a 3D box around the player.
+                Vector3 offset = new Vector3(
+                    Random.Range(
+                        -spawnAreaWidth / 2f + spawnPadding,
+                         spawnAreaWidth / 2f - spawnPadding),
+                    Random.Range(
+                        -spawnAreaHeight / 2f + spawnPadding,
+                         spawnAreaHeight / 2f - spawnPadding),
+                    Random.Range(
+                        -spawnAreaDepth / 2f + spawnPadding,
+                         spawnAreaDepth / 2f - spawnPadding)
+                );
 
-                if (!hasPlayer ||
-                    Vector2.Distance(spawnPosition, playerPosition)
+                spawnPosition = playerTransform.position + offset;
+
+                // Check the full 3D distance from the player.
+                if (Vector3.Distance(
+                    spawnPosition,
+                    playerTransform.position)
                     >= minDistanceFromPlayer)
                 {
                     foundPosition = true;
@@ -99,32 +104,67 @@ public class AsteriodSpawner : MonoBehaviour
             }
 
             GameObject spawnedAsteroid = Instantiate(
-     asteroidPrefab,
-     spawnPosition,
-     Quaternion.identity
- );
+                asteroidPrefab,
+                spawnPosition,
+                Quaternion.identity
+            );
 
-            astriod asteroidScript = spawnedAsteroid.GetComponent<astriod>();
+            astriod asteroidScript =
+                spawnedAsteroid.GetComponent<astriod>();
 
-            if (asteroidScript != null && GameManager.instance != null)
+            if (asteroidScript != null &&
+                GameManager.instance != null)
             {
-                if (!GameManager.instance.asteriodList.Contains(asteroidScript))
+                if (!GameManager.instance.asteriodList
+                    .Contains(asteroidScript))
                 {
-                    GameManager.instance.asteriodList.Add(asteroidScript);
+                    GameManager.instance.asteriodList
+                        .Add(asteroidScript);
                 }
             }
             else
             {
-                Debug.LogError("Spawned asteroid is missing its astriod script!");
+                Debug.LogError(
+                    "Spawned asteroid is missing its astriod script!");
             }
 
             spawned++;
         }
 
-        Debug.Log("Asteroid Spawner created " + spawned + " asteroids.");
+        Debug.Log(
+            "Asteroid Spawner created " + spawned + " asteroids.");
+
         if (GameManager.instance != null)
         {
             GameManager.instance.FinishAsteroidSpawning();
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Transform target = playerTransform;
+
+        if (target == null &&
+            GameManager.instance != null &&
+            GameManager.instance.playerController != null &&
+            GameManager.instance.playerController.pawn != null)
+        {
+            target = GameManager.instance
+                .playerController.pawn.transform;
+        }
+
+        if (target == null)
+            return;
+
+        Gizmos.color = Color.green;
+
+        Gizmos.DrawWireCube(
+            target.position,
+            new Vector3(
+                spawnAreaWidth,
+                spawnAreaHeight,
+                spawnAreaDepth
+            )
+        );
     }
 }

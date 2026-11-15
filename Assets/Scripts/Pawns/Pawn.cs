@@ -12,10 +12,13 @@ public abstract class Pawn : MonoBehaviour
 
     public float pitchRotationAmount;
 
+    public Shooter shooter;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public virtual void Start()
     {
         rb = GetComponent<Rigidbody>();
+        shooter = GetComponent<Shooter>();
     }
 
     // Update is called once per frame
@@ -39,4 +42,6 @@ public abstract class Pawn : MonoBehaviour
     public abstract void PitchClockwise();
 
     public abstract void PitchCounterclockwise();
+
+    public abstract void Shoot();
 }

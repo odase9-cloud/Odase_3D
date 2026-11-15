@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class PlayerPawn : Pawn
 {
+    public float damageAmount;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public override void Start()
     {
@@ -62,5 +64,27 @@ public class PlayerPawn : Pawn
     public override void YawCounterclockwise()
     {
         transform.Rotate(0.0f, -yawRotationAmount * Time.deltaTime, 0.0f);
+    }
+    private void OnTriggerEnter(Collider collision)
+    {
+        Health health = collision.GetComponent<Health>();
+        if (health != null)
+        {
+            health.TakeDamage(damageAmount);
+        }
+
+    }
+    public override void Shoot()
+    {
+        shooter.Shoot();
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Health health = collision.GetComponent<Health>();
+        if (health != null)
+        {
+            health.TakeDamage(damageAmount);
+        }
+
     }
 }

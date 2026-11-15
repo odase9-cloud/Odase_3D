@@ -1,8 +1,9 @@
+
 using UnityEngine;
 
 public class DeathVolume : MonoBehaviour
 {
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter(Collider collision)
     {
         Death death = collision.GetComponent<Death>();
 

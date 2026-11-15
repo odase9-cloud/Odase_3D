@@ -43,10 +43,9 @@ public class SplittingDeath : Death
         Destroy(gameObject);
     }
 
-
     private void SplitAsteroid()
     {
-        Collider2D parentCollider = GetComponent<Collider2D>();
+        Collider parentCollider = GetComponent<Collider>();
 
         float parentRadius = parentCollider != null
             ? parentCollider.bounds.extents.magnitude
@@ -54,17 +53,13 @@ public class SplittingDeath : Death
 
         for (int i = 0; i < childrenToSpawn; i++)
         {
-            float angle = (360f / childrenToSpawn) * i
-                + Random.Range(-15f, 15f);
+            // Distribute children in 3D space.
+            Vector3 direction = Random.onUnitSphere;
 
-            Vector2 direction = new Vector2(
-                Mathf.Cos(angle * Mathf.Deg2Rad),
-                Mathf.Sin(angle * Mathf.Deg2Rad)
-            ).normalized;
             float spawnDistance = parentRadius + spawnGap;
 
             Vector3 spawnPosition = transform.position
-                + (Vector3)(direction * spawnDistance);
+                + direction * spawnDistance;
 
             GameObject child = Instantiate(
                 childAsteroidPrefab,
@@ -72,8 +67,8 @@ public class SplittingDeath : Death
                 Quaternion.identity
             );
 
-
-            Canvas healthCanvas = child.GetComponentInChildren<Canvas>(true);
+            Canvas healthCanvas =
+                child.GetComponentInChildren<Canvas>(true);
 
             if (healthCanvas != null)
             {
@@ -82,7 +77,8 @@ public class SplittingDeath : Death
                 healthCanvas.overrideSorting = true;
                 healthCanvas.sortingOrder = 100;
 
-                Image healthImage = healthCanvas.GetComponentInChildren<Image>(true);
+                Image healthImage =
+                    healthCanvas.GetComponentInChildren<Image>(true);
 
                 if (healthImage != null)
                 {
@@ -93,7 +89,9 @@ public class SplittingDeath : Death
                 }
                 else
                 {
-                    Debug.LogError("Child asteroid Canvas has no Image!");
+                    Debug.LogError(
+                        "Child asteroid Canvas has no Image!"
+                    );
                 }
             }
             else
@@ -101,33 +99,22 @@ public class SplittingDeath : Death
                 Debug.LogError("Child asteroid has no Canvas!");
             }
 
-            Vector3 originalCanvasScale = Vector3.one;
-
-            if (healthCanvas != null)
-            {
-                originalCanvasScale = healthCanvas.transform.lossyScale;
-            }
-
             child.transform.localScale =
                 transform.localScale * childScaleMultiplier;
 
-            if (healthCanvas != null)
-            {
-                Vector3 parentScale = healthCanvas.transform.parent.lossyScale;
-
-                healthCanvas.transform.localScale = new Vector3(
-                    originalCanvasScale.x / parentScale.x,
-                    originalCanvasScale.y / parentScale.y,
-                    originalCanvasScale.z / parentScale.z
-                );
-            }
-
-            Collider2D childCollider = child.GetComponent<Collider2D>();
+            Collider childCollider =
+                child.GetComponent<Collider>();
 
             float childRadius = childCollider != null
                 ? childCollider.bounds.extents.magnitude
                 : parentRadius * childScaleMultiplier;
 
+            // Keep children separated from the parent asteroid.
+            child.transform.position = transform.position
+                + direction *
+                (parentRadius + childRadius + spawnGap);
+
+            // Keep the health canvas from scaling with the asteroid.
             if (healthCanvas != null)
             {
                 float scale = Mathf.Max(
@@ -135,12 +122,9 @@ public class SplittingDeath : Death
                     0.001f
                 );
 
-                healthCanvas.transform.localScale = Vector3.one / scale;
+                healthCanvas.transform.localScale =
+                    Vector3.one / scale;
             }
-
-            child.transform.position = transform.position
-                + (Vector3)(direction *
-                    (parentRadius + childRadius + spawnGap));
 
             SplittingDeath childDeath =
                 child.GetComponent<SplittingDeath>();
@@ -150,25 +134,28 @@ public class SplittingDeath : Death
                 childDeath.splitDepth = splitDepth + 1;
             }
 
-            astriod childAsteroid = child.GetComponent<astriod>();
+            astriod childAsteroid =
+                child.GetComponent<astriod>();
 
             if (childAsteroid != null &&
                 GameManager.instance != null)
             {
-                GameManager.instance.RegisterAsteroid(childAsteroid);
+                GameManager.instance.RegisterAsteroid(
+                    childAsteroid
+                );
             }
 
-            Rigidbody2D rb = child.GetComponent<Rigidbody2D>();
+            Rigidbody rb = child.GetComponent<Rigidbody>();
 
             if (rb != null)
             {
                 rb.AddForce(
                     direction * splitForce,
-                    ForceMode2D.Impulse
+                    ForceMode.Impulse
                 );
             }
         }
     }
-
 }
+
 
