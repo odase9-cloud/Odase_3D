@@ -3,6 +3,7 @@ using UnityEngine;
 public class PlayerPawn : Pawn
 {
     public float damageAmount;
+    public float maxYPosition;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public override void Start()
@@ -78,13 +79,22 @@ public class PlayerPawn : Pawn
     {
         shooter.Shoot();
     }
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        Health health = collision.GetComponent<Health>();
-        if (health != null)
-        {
-            health.TakeDamage(damageAmount);
-        }
 
+    private void LateUpdate()
+    {
+        if (transform.position.y > maxYPosition)
+        {
+            Vector3 position = transform.position;
+            position.y = maxYPosition;
+            transform.position = position;
+        }
+        if (rb != null && rb.linearVelocity.y > 0f)
+        {
+            rb.linearVelocity = new Vector3(
+                rb.linearVelocity.x,
+                0f,
+                rb.linearVelocity.z
+            );
+        }
     }
 }

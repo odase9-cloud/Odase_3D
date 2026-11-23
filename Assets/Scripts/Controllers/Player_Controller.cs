@@ -21,6 +21,10 @@ public class PlayerController : Controler
     public override void Start()
     {
         base.Start();
+        if (GameManager.instance != null) 
+        { 
+          GameManager.instance.playerController = this;
+        }
     }
 
     // Update is called once per frame

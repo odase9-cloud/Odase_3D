@@ -2,6 +2,7 @@
 using System;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.UI;
 
 public class Health : MonoBehaviour
@@ -10,6 +11,7 @@ public class Health : MonoBehaviour
     public float maxHealth;
     public Image healthImage;
     public int scoreToAdd;
+    public AudioSource audioSource;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
 
@@ -58,6 +60,8 @@ public class Health : MonoBehaviour
         {
             healthImage.fillAmount = currentHealth / maxHealth;
         }
+        if (audioSource != null)
+            audioSource.Play();
     }
     public void TakeDamage(float damageAmount)
     {
