@@ -80,21 +80,26 @@ public class PlayerPawn : Pawn
         shooter.Shoot();
     }
 
+
     private void LateUpdate()
     {
-        if (transform.position.y > maxYPosition)
+        if (rb == null)
+            return;
+
+        Vector3 position = rb.position;
+        Vector3 velocity = rb.linearVelocity;
+
+        if (position.y > maxYPosition)
         {
-            Vector3 position = transform.position;
             position.y = maxYPosition;
-            transform.position = position;
-        }
-        if (rb != null && rb.linearVelocity.y > 0f)
-        {
-            rb.linearVelocity = new Vector3(
-                rb.linearVelocity.x,
-                0f,
-                rb.linearVelocity.z
-            );
+            rb.position = position;
+
+            if (velocity.y > 0f)
+            {
+                velocity.y = 0f;
+                rb.linearVelocity = velocity;
+            }
         }
     }
+
 }
